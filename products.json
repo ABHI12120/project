@@ -1,0 +1,26 @@
+[
+  {
+    "id": "p1",
+    "title": "Classic Spiderman Suit",
+    "price": 3499,
+    "image": "https://via.placeholder.com/500x600?text=Spiderman",
+    "category": "movie",
+    "description": "Printed spandex spiderman suit. Demo product for the clone."
+  },
+  {
+    "id": "p2",
+    "title": "Fantasy Game Armor",
+    "price": 6999,
+    "image": "https://via.placeholder.com/500x600?text=Game+Armor",
+    "category": "game",
+    "description": "Detailed armored costume — demo data."
+  },
+  {
+    "id": "p3",
+    "title": "Anime School Uniform",
+    "price": 2499,
+    "image": "https://via.placeholder.com/500x600?text=Anime+Uniform",
+    "category": "anime",
+    "description": "Cute school uniform cosplay — demo."
+  }
+]
