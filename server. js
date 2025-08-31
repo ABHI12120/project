@@ -1,0 +1,19 @@
+const express = require('express');
+const app = express();
+const path = require('path');
+const products = require('../products.json'); // reuse file
+
+app.use(express.json());
+app.use(express.static(path.join(__dirname, '..'))); // serve static frontend
+
+app.get('/api/products', (req,res)=>{
+  res.json(products);
+});
+
+app.post('/api/orders', (req,res)=>{
+  // in real app: validate, store to DB, process payment
+  console.log('ORDER RECEIVED', req.body);
+  res.json({ok:true, message:'order received (demo)'});
+});
+
+app.listen(4000, ()=> console.log('Server listening on http://localhost:4000'));
