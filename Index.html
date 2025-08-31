@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SimCosplay — Demo Clone</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="logo" href="#">SimCosplay<span class="dot">.</span></a>
+      <nav class="main-nav">
+        <a href="#">Home</a>
+        <a href="#new">New</a>
+        <a href="#game">Game</a>
+        <a href="#movie">Movie/TV</a>
+        <a href="#all">All</a>
+      </nav>
+      <div class="header-actions">
+        <input id="search" placeholder="Search costumes..." />
+        <button id="cart-btn" class="cart-btn">Cart (<span id="cart-count">0</span>)</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="container hero-inner">
+        <h1>Quality Anime, Game & Movie Cosplay Costumes</h1>
+        <p>Explore newest arrivals and fan favorites — demo clone for learning.</p>
+        <a href="#catalog" class="btn">Shop Now</a>
+      </div>
+    </section>
+
+    <section id="catalog" class="container catalog">
+      <h2>Popular Costumes</h2>
+      <div id="products-grid" class="products-grid">
+        <!-- product cards are injected by JS -->
+      </div>
+    </section>
+  </main>
+
+  <!-- Product detail modal -->
+  <div id="product-modal" class="modal hidden">
+    <div class="modal-content">
+      <button id="modal-close" class="close">✕</button>
+      <img id="modal-image" src="" alt="" />
+      <div class="modal-info">
+        <h3 id="modal-title"></h3>
+        <p id="modal-desc"></p>
+        <p class="price" id="modal-price"></p>
+        <button id="modal-add" class="btn">Add to Cart</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cart modal -->
+  <div id="cart-modal" class="modal hidden">
+    <div class="modal-content cart-content">
+      <button id="cart-close" class="close">✕</button>
+      <h3>Your Cart</h3>
+      <ul id="cart-items"></ul>
+      <div class="cart-footer">
+        <strong>Total: ₹<span id="cart-total">0</span></strong>
+        <button id="checkout" class="btn">Checkout (demo)</button>
+      </div>
+    </div>
+  </div>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>© Demo — SimCosplay clone (learning project). Replace images & data before publishing.</p>
+    </div>
+  </footer>
+
+  <script src="js/scripts.js"></script>
+</body>
+</html>
