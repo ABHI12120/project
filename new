@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Cosplay Costumes Shop</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header>
+    <h1>Cosplay Costumes Shop</h1>
+    <nav>
+      <a href="#" onclick="filterCategory('All'); return false;">Home</a>
+      <a href="#" onclick="filterCategory('Anime'); return false;">Anime</a>
+      <a href="#" onclick="filterCategory('Marvel'); return false;">Marvel</a>
+      <a href="#" onclick="filterCategory('Game'); return false;">Game</a>
+      <a href="#" onclick="filterCategory('More'); return false;">More</a>
+      <a href="#" onclick="openCart(); return false;" title="Buy items / Checkout">Cart &amp; Checkout</a>
+      <a href="#" onclick="showAdmin(); return false;" title="Admin Panel — add/update/delete costumes">Admin Panel</a>
+    </nav>
+
+    <!-- 🔍 Search Box -->
+    <div class="search-box">
+      <input type="text" id="search-input" placeholder="Search costumes...">
+      <button id="search-btn">Search</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- Hero / Offer banner -->
+    <section id="hero" class="hero">
+      <div class="hero-inner">
+      </div>
+    </section>
+
+    <!-- Featured Section -->
+    <section id="featured-section" class="featured-section">
+      <h2>Featured Costumes</h2>
+      <div class="featured-grid" id="featured-list"></div>
+    </section>
+
+    <!-- Products / Home Section -->
+    <section id="home-section">
+      <section class="products" id="product-list"></section>
+      <button id="more-btn" class="more"> more</button>
+    </section>
+
+    <!-- Admin Section (hidden by default) -->
+    <section id="admin-section" class="admin-section" aria-hidden="true">
+      <div class="admin-wrap" role="region" aria-label="Admin panel">
+        <div class="admin-actions">
+          <button id="btn-add-new">Add New Costume</button>
+          <button id="btn-export">Export JSON</button>
+          <label class="muted" title="Import products JSON">
+            Import JSON
+            <input id="import-file" type="file" accept="application/json" style="display:none;">
+          </label>
+          <button id="btn-reset" class="danger">Reset to Defaults</button>
+          <div style="margin-left:auto" class="small">Local-only demo (localStorage). No backend.</div>
+        </div>
+
+        <div id="admin-list" aria-live="polite"></div>
+
+        <!-- Add / Edit form (hidden by default) -->
+        <form id="admin-form" class="admin-form" style="display:none; margin-top:18px;">
+          <input type="hidden" id="prod-id">
+          <label>
+            Name
+            <input id="prod-name" required>
+          </label>
+          <label>
+            Price (include $)
+            <input id="prod-price" required placeholder="$39.99">
+          </label>
+          <label>
+            Category
+            <input id="prod-category" required placeholder="Anime / Marvel / Game / More">
+          </label>
+          <label>
+            Image path or URL
+            <input id="prod-image" placeholder="images/placeholder.png or https://...">
+          </label>
+          <label>
+            Featured
+            <select id="prod-featured">
+              <option value="false">No</option>
+              <option value="true">Yes</option>
+            </select>
+          </label>
+          <label class="full">
+            Description
+            <textarea id="prod-desc"></textarea>
+          </label>
+
+          <div class="full controls">
+            <button id="save-btn" type="submit" class="btn-primary">Save</button>
+            <button id="cancel-btn" type="button" class="btn-secondary">Cancel</button>
+            <button id="close-admin" type="button" style="margin-left:auto;">Close Admin</button>
+          </div>
+        </form>
+
+        <div id="admin-message" class="msg" role="status" aria-live="polite"></div>
+      </div>
+    </section>
+  </main>
+
+  <button id="cart-btn" title="Open Cart">🛒 Cart (<span id="cart-count">0</span>)</button>
+
+  <div id="cart-modal" class="cart-modal" aria-hidden="true">
+    <div class="cart-content">
+      <span class="close" id="close-cart" role="button" aria-label="Close cart">&times;</span>
+      <h2>Your Shopping Cart</h2>
+      <ul id="cart-items"></ul>
+      <p id="cart-total"></p>
+      <div class="cart-actions">
+        <button id="checkout-btn" class="btn-primary">Checkout</button>
+        <button id="close-cart-2" class="btn-secondary">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="details-modal" class="details-modal" aria-hidden="true">
+    <div class="details-content">
+      <span class="close" id="close-details" role="button" aria-label="Close details">&times;</span>
+      <img id="details-image" src="images/placeholder.png" alt="" class="details-img" loading="lazy">
+      <h3 id="details-name"></h3>
+      <p id="details-category" class="small"></p>
+      <p id="details-description"></p>
+      <p id="details-price" class="price"></p>
+      <div class="details-actions" id="details-actions"></div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
+
+
+
+/* Header: set blue background */
+header { background: #007bff; color: #fff; padding:16px; text-align:center; }
+header h1 { margin:0; font-size:1.4rem; }
+nav { margin-top:8px; }
+nav a { color:#fff; margin:0 10px; text-decoration:none; font-weight:600; cursor:pointer; }
+
+/* 🔍 Search box */
+.search-box {
+  margin-top: 10px;
+}
+.search-box input {
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+  width: 200px;
+}
+.search-box button {
+  padding: 6px 12px;
+  margin-left: 6px;
+  border: none;
+  border-radius: 6px;
+  background: #0056d6;
+  color: #fff;
+  cursor: pointer;
+  font-weight: 600;
+}
+.search-box button:hover {
+  background: #003fa3;
+}
+
+/* Page & layout base */
+body { font-family: Arial, sans-serif; margin:0; background:#f5f7fb; color:#111; }
+main { padding-bottom: 80px; }
+
+/* Hero / offer banner */
+.hero { background: linear-gradient(90deg, rgba(2,6,23,0.03), rgba(0,123,255,0.05)); padding:18px 12px; text-align:center; }
+.hero-inner { max-width:1100px; margin:0 auto; }
+.hero h2 { margin:0 0 6px; font-size:1.25rem; color:#073a8a; }
+.hero p { margin:0; color:#234; }
+
+/* Featured section */
+.featured-section { max-width:1200px; margin:18px auto 8px; padding:0 12px; }
+.featured-section h2 { margin:8px 0; color:#0b2b5a; }
+.featured-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:14px; }
+
+/* Grid-based product layout */
+.products {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 18px;
+  max-width: 1200px;
+  margin: 18px auto;
+  padding: 0 12px;
+  align-items: start;
+}
+
+/* Product card */
+.product {
+  background: #fff;
+  border: 1px solid #e6e6e6;
+  border-radius: 10px;
+  padding: 14px;
+  box-sizing: border-box;
+  text-align: left;
+  overflow: hidden;
+  transition: transform 220ms ease, box-shadow 220ms ease, border-color 220ms ease;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 320px;
+}
+
+/* Hover / focus */
+.product:hover,
+.product:focus-within {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 30px rgba(22, 30, 40, 0.08);
+  border-color: #d0d7ff;
+  outline: none;
+}
+
+/* Image */
+.product-img {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  border-radius: 8px;
+  display: block;
+  flex-shrink: 0;
+  background: linear-gradient(180deg,#f5f6fb,#ffffff);
+}
+
+/* Card content layout */
+.product h3 {
+  margin: 4px 0 2px;
+  font-size: 1.05rem;
+  line-height: 1.2;
+  color: #111;
+}
+
+.product .small { margin:0; color:#666; font-size:0.88rem; }
+
+/* Truncated description */
+.product .desc {
+  color: #555;
+  font-size: 0.95rem;
+  line-height: 1.35;
+  margin-top: 6px;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex-grow: 1;
+}
+
+/* Actions row */
+.product .actions { display:flex; gap:8px; margin-top:8px; align-items:center; justify-content:space-between; }
+
+/* Add to cart button */
+.product button {
+  background: #007bff;
+  color: #fff;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight:600;
+  transition: background 160ms ease, transform 160ms ease;
+}
+.product button:hover,
+.product button:focus { background:#0056d6; transform: translateY(-2px); }
+
+/* Price */
+.product .price { color:#111; font-weight:700; }
+
+/* Load more */
+.load-more { display:block; margin:12px auto 40px auto; padding:10px 18px; border:none; background:#007bff; color:#fff; border-radius:8px; cursor:pointer; }
+
+/* Admin styles */
+.admin-section { display:none; padding:20px; max-width:1100px; margin:20px auto; }
+.admin-wrap { background:#fff; border-radius:8px; padding:18px; box-shadow:0 2px 10px rgba(0,0,0,0.04); }
+.admin-actions { display:flex; gap:12px; flex-wrap:wrap; align-items:center; margin-bottom:12px; }
+.admin-actions button, .admin-actions label { padding:8px 12px; border-radius:6px; border:none; cursor:pointer; background:#007bff; color:#fff; }
+.admin-actions .danger { background:#e04; }
+.product-row { display:flex; gap:12px; align-items:center; padding:10px; border-bottom:1px solid #eee; }
+.product-row img { width:80px; height:100px; object-fit:cover; border-radius:6px; }
+.product-info { flex:1; }
+.small { font-size:13px; color:#666; }
+.admin-form { display:grid; grid-template-columns:1fr 1fr; gap:12px; align-items:start; margin-top:12px; }
+.admin-form .full { grid-column:1/-1; }
+.controls { display:flex; gap:8px; }
+textarea { resize:vertical; min-height:80px; }
+.muted { background:#e0e0e0; color:#333; padding:8px 12px; border-radius:6px; cursor:pointer; }
+.msg { margin-top:8px; color:#0a6; }
+
+/* Featured card tweaks (smaller cards) */
+.featured-card { background:#fff; border:1px solid #e6e6e6; border-radius:8px; padding:10px; display:flex; flex-direction:column; gap:8px; align-items:center; text-align:center; cursor:pointer; transition:transform .18s ease, box-shadow .18s ease; }
+.featured-card img { width:100%; height:140px; object-fit:cover; border-radius:6px; }
+.featured-card h4 { margin:6px 0 0; font-size:1rem; }
+.featured-badge { background:#ffd54d; color:#5a3a00; padding:6px 8px; border-radius:999px; font-weight:700; font-size:0.85rem; margin-top:6px; }
+
+/* Modals */
+.cart-modal, .details-modal { display:none; position:fixed; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:100; }
+.cart-content, .details-content { background:#fff; margin:50px auto; padding:18px; width:90%; max-width:720px; border-radius:8px; position:relative; text-align:left; }
+.cart-content .close, .details-content .close { position:absolute; right:12px; top:8px; font-size:22px; cursor:pointer; }
+#cart-btn { position:fixed; right:26px; bottom:26px; background:#007bff; color:#fff; border:none; border-radius:50%; width:56px; height:56px; font-size:22px; cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,0.2); }
+
+/* Details modal content */
+.details-img { width:100%; height:auto; max-height:360px; object-fit:cover; border-radius:6px; display:block; margin-bottom:12px; }
+.details-actions { margin-top:12px; text-align:right; }
+.details-actions button { background:#007bff; color:#fff; border:none; padding:8px 12px; border-radius:8px; cursor:pointer; }
+
+/* Responsive tweaks */
+@media (max-width: 720px) {
+  .product { min-height: 300px; }
+  .product-img { height: 160px; }
+  .cart-content, .details-content { width:94%; margin:40px auto; }
+}
+
+
+
+// -- Products storage keys & defaults
+const LS_PRODUCTS_KEY = 'products';
+const DEFAULT_PRODUCTS = [
+  { id: 1,  name: "Naruto Uzumaki Costume",      price: "$39.99", category: "Anime", description: "Authentic Naruto Uzumaki costume for cosplay events.", image: "images/placeholder.png" },
+  { id: 2,  name: "Sailor Moon Costume",         price: "$44.99", category: "Anime", description: "Classic Sailor Moon outfit.", image: "images/placeholder.png" },
+  { id: 3,  name: "Goku Gi (Adult)",             price: "$49.99", category: "Anime", description: "Orange gi for Saiyan fans.", image: "images/placeholder.png" },
+  { id: 4,  name: "Mikasa Ackerman Jacket",      price: "$54.99", category: "Anime", description: "Survey Corps jacket replica.", image: "images/placeholder.png" },
+  { id: 5,  name: "Demon Slayer Kimono",         price: "$45.99", category: "Anime", description: "Stylish patterned kimono set.", image: "images/placeholder.png" },
+  { id: 6,  name: "Spider-Man Suit",             price: "$49.99", category: "Marvel", description: "Spider-Man cosplay suit.", image: "images/placeholder.png" },
+  { id: 7,  name: "Iron Man Armor",              price: "$99.99", category: "Marvel", description: "Iron Man armor replica.", image: "images/placeholder.png" },
+  { id: 8,  name: "Captain Marvel Jacket",       price: "$59.99", category: "Marvel", description: "Stylish Captain Marvel jacket.", image: "images/placeholder.png" },
+  { id: 9,  name: "Black Panther Outfit",        price: "$79.99", category: "Marvel", description: "Vibranium-inspired suit.", image: "images/placeholder.png" },
+  { id:10,  name: "Falcon Wings (Prop)",         price: "$39.99", category: "Marvel", description: "Lightweight wing props.", image: "images/placeholder.png" },
+  { id:11, name: "Geralt of Rivia Costume",      price: "$69.99", category: "Game",  description: "The Witcher Geralt costume.", image: "images/placeholder.png" },
+  { id:12, name: "Zelda Princess Dress",         price: "$59.99", category: "Game",  description: "Princess Zelda dress.", image: "images/placeholder.png" },
+  { id:13, name: "Link Tunic & Cap",             price: "$49.99", category: "Game",  description: "Link's green tunic and cap.", image: "images/placeholder.png" },
+  { id:14, name: "Mario Overalls",               price: "$34.99", category: "Game",  description: "Classic Mario overalls and hat.", image: "images/placeholder.png" },
+  { id:15, name: "Lara Croft Outfit",            price: "$54.99", category: "Game",  description: "Adventurer outfit set.", image: "images/placeholder.png" },
+  { id:16, name: "Darth Vader Costume",          price: "$79.99", category: "Marvel",  description: "Iconic Darth Vader costume.", image: "images/placeholder.png" },
+  { id:17, name: "Harry Potter Robe",            price: "$29.99", category: "Marvel",  description: "House robe and tie.", image: "images/placeholder.png" },
+  { id:18, name: "Daenerys Dress",               price: "$69.99", category: "Marvel",  description: "Flowing dress inspired by Daenerys.", image: "images/placeholder.png" },
+  { id:19, name: "Eowyn Battle Dress",           price: "$64.99", category: "Marvel",  description: "Rugged battle-ready gown.", image: "images/placeholder.png" },
+  { id:20, name: "Prop Sword (Foam)",            price: "$24.99", category: "Marvel",  description: "Lightweight prop sword for cosplay.", image: "images/placeholder.png" }
+];
+
+// Pagination & app state
+let itemsPerPage = 6;
+let currentPage = 1;
+let currentCategory = "All";
+let products = loadProductsFromStorage();
+const PLACEHOLDER = 'images/placeholder.png';
+
+// Cart state
+let cart = [];
+
+// ----- Storage helpers -----
+function loadProductsFromStorage() {
+  try {
+    const raw = localStorage.getItem(LS_PRODUCTS_KEY);
+    if (!raw) {
+      localStorage.setItem(LS_PRODUCTS_KEY, JSON.stringify(DEFAULT_PRODUCTS));
+      return structuredClone(DEFAULT_PRODUCTS);
+    }
+    return JSON.parse(raw);
+  } catch (e) {
+    console.error('Failed to load products from storage', e);
+    return structuredClone(DEFAULT_PRODUCTS);
+  }
+}
+function saveProductsToStorage(list) {
+  localStorage.setItem(LS_PRODUCTS_KEY, JSON.stringify(list));
+}
+
+// ----- Product rendering -----
+function getFiltered() {
+  let list = products.slice();
+  if (currentCategory !== "All") list = list.filter(p => p.category === currentCategory);
+  return list;
+}
+
+function displayProducts() {
+  const productList = document.getElementById('product-list');
+  if (!productList) return;
+  productList.innerHTML = '';
+
+  const filtered = getFiltered();
+  const end = itemsPerPage * currentPage;
+  const pageItems = filtered.slice(0, end);
+
+  if (pageItems.length === 0) {
+    productList.innerHTML = '<p>No products found.</p>';
+  } else {
+    pageItems.forEach(product => {
+      const imgSrc = product.image || PLACEHOLDER;
+      const safeName = escapeHtml(product.name);
+      productList.innerHTML += `
+        <div class="product" onclick="showProductDetails(event, ${product.id})">
+          <img src="${imgSrc}" alt="${safeName}" class="product-img" loading="lazy">
+          <h3>${safeName}</h3>
+          <p>Category: ${escapeHtml(product.category)}</p>
+          <p>Price: ${escapeHtml(product.price)}</p>
+          <button onclick="addToCart(event, ${product.id})">Add to Cart</button>
+        </div>
+      `;
+    });
+  }
+
+  const loadMoreBtn = document.getElementById('load-more-btn');
+  if (loadMoreBtn) loadMoreBtn.style.display = (filtered.length > end) ? 'block' : 'none';
+}
+
+// ----- Search feature -----
+function doSearch() {
+  const term = document.getElementById('search-input').value.trim().toLowerCase();
+  currentPage = 1;
+  if (term) {
+    const filtered = products.filter(p =>
+      p.name.toLowerCase().includes(term) ||
+      p.category.toLowerCase().includes(term) ||
+      (p.description && p.description.toLowerCase().includes(term))
+    );
+    displaySearchResults(filtered);
+  } else {
+    displayProducts();
+  }
+}
+
+function displaySearchResults(list) {
+  const productList = document.getElementById('product-list');
+  if (!productList) return;
+  productList.innerHTML = '';
+  if (list.length === 0) {
+    productList.innerHTML = '<p>No products found.</p>';
+  } else {
+    list.forEach(product => {
+      const imgSrc = product.image || PLACEHOLDER;
+      productList.innerHTML += `
+        <div class="product" onclick="showProductDetails(event, ${product.id})">
+          <img src="${imgSrc}" alt="${escapeHtml(product.name)}" class="product-img" loading="lazy">
+          <h3>${escapeHtml(product.name)}</h3>
+          <p>Category: ${escapeHtml(product.category)}</p>
+          <p>Price: ${escapeHtml(product.price)}</p>
+          <button onclick="addToCart(event, ${product.id})">Add to Cart</button>
+        </div>
+      `;
+    });
+  }
+  document.getElementById('load-more-btn').style.display = 'none';
+}
+
+// ----- Init and main UI events -----
+function init() {
+  document.getElementById('load-more-btn')?.addEventListener('click', () => {
+    currentPage++;
+    displayProducts();
+    scrollToMore();
+  });
+
+  document.getElementById('cart-btn')?.addEventListener('click', () => {
+    openCart();
+  });
+  document.getElementById('close-cart')?.addEventListener('click', () => {
+    document.getElementById('cart-modal').style.display = 'none';
+  });
+  document.getElementById('close-details')?.addEventListener('click', () => {
+    document.getElementById('details-modal').style.display = 'none';
+  });
+
+  // Admin wiring
+  document.getElementById('btn-add-new')?.addEventListener('click', ()=> {
+    openAdminForm();
+  });
+  document.getElementById('btn-export')?.addEventListener('click', adminExport);
+  document.getElementById('import-file')?.addEventListener('change', adminImport);
+  document.getElementById('btn-reset')?.addEventListener('click', adminReset);
+  document.getElementById('cancel-btn')?.addEventListener('click', (e)=> { e.preventDefault(); closeAdminForm(); });
+  document.getElementById('admin-form')?.addEventListener('submit', adminSave);
+  document.getElementById('close-admin')?.addEventListener('click', ()=> { hideAdmin(); });
+
+  // Search wiring
+  document.getElementById('search-btn')?.addEventListener('click', doSearch);
+  document.getElementById('search-input')?.addEventListener('keypress', (e)=>{
+    if (e.key === 'Enter') doSearch();
+  });
+
+  // initial render
+  displayProducts();
+  updateCartCount();
+  renderAdminList();
+
+  // respond to storage events (other tab/admin changes)
+  window.addEventListener('storage', (e)=> {
+    if (e.key === LS_PRODUCTS_KEY) {
+      products = loadProductsFromStorage();
+      displayProducts();
+      renderAdminList();
+    }
+  });
+}
+
+document.addEventListener('DOMContentLoaded', init);
+
+// ----- Category filter -----
+window.filterCategory = function(category) {
+  currentCategory = (category === 'All' || category === 'Home') ? 'All' : category;
+  currentPage = 1;
+  hideAdmin();
+  displayProducts();
+};
+
+// ----- Cart functions -----
+window.addToCart = function(event, id) {
+  event.stopPropagation();
+  const item = cart.find(i => i.id === id);
+  if (item) item.quantity++;
+  else {
+    const prod = products.find(p => p.id === id);
+    cart.push(Object.assign({}, prod, { quantity: 1 }));
+  }
+  updateCartCount();
+};
+
+function updateCartCount() {
+  const countEl = document.getElementById('cart-count');
+  if (countEl) countEl.textContent = cart.reduce((s, it) => s + it.quantity, 0);
+}
+
+function openCart() {
+  document.getElementById('cart-modal').style.display = 'block';
+  displayCart();
+}
+
+function displayCart() {
+  const cartItems = document.getElementById('cart-items');
+  if (!cartItems) return;
+  cartItems.innerHTML = '';
+  let total = 0;
+  cart.forEach(item => {
+    const price = Number(String(item.price).replace('$','')) || 0;
+    total += price * (item.quantity || 1);
+    cartItems.innerHTML += `<li>${escapeHtml(item.name)} x${item.quantity} - $${(price*item.quantity).toFixed(2)} <button onclick="removeFromCart(${item.id})">Remove</button></li>`;
+  });
+  document.getElementById('cart-total').textContent = 'Total: $' + total.toFixed(2);
+}
+
+window.removeFromCart = function(id) {
+  cart = cart.filter(i => i.id !== id);
+  displayCart();
+  updateCartCount();
+};
+
+// ----- Product details -----
+window.showProductDetails = function(event, id) {
+  if (event.target.tagName === 'BUTTON') return;
+  const p = products.find(x => x.id === id);
+  if (!p) return;
+  const imgSrc = p.image || PLACEHOLDER;
+  document.getElementById('details-image').src = imgSrc;
+  document.getElementById('details-image').alt = p.name;
+  document.getElementById('details-name').textContent = p.name;
+  document.getElementById('details-category').textContent = 'Category: ' + p.category;
+  document.getElementById('details-description').textContent = p.description;
+  document.getElementById('details-price').textContent = 'Price: ' + p.price;
+  document.getElementById('details-modal').style.display = 'block';
+};
+
+// ----- Admin UI functions -----
+function renderAdminList() {
+  const listEl = document.getElementById('admin-list');
+  if (!listEl) return;
+  products = loadProductsFromStorage();
+  listEl.innerHTML = '';
+  if (!products.length) {
+    listEl.innerHTML = '<p>No costumes available.</p>';
+    return;
+  }
+  products.forEach(p => {
+    const row = document.createElement('div');
+    row.className = 'product-row';
+    row.innerHTML = `
+      <img src="${escapeHtml(p.image || PLACEHOLDER)}" alt="${escapeHtml(p.name)}">
+      <div class="product-info">
+        <strong>${escapeHtml(p.name)}</strong>
+        <div class="small">${escapeHtml(p.category)} • ${escapeHtml(p.price)}</div>
+        <div class="small">${escapeHtml(p.description || '')}</div>
+      </div>
+      <div class="controls">
+        <button data-id="${p.id}" class="edit">Edit</button>
+        <button data-id="${p.id}" class="delete danger">Delete</button>
+      </div>
+    `;
+    listEl.appendChild(row);
+  });
+
+  listEl.querySelectorAll('.edit').forEach(btn=>{
+    btn.addEventListener('click', ()=> openAdminEdit(Number(btn.dataset.id)));
+  });
+  listEl.querySelectorAll('.delete').forEach(btn=>{
+    btn.addEventListener('click', ()=> adminDelete(Number(btn.dataset.id)));
+  });
+}
+
+function openAdminEdit(id) {
+  const p = products.find(x => x.id === id);
+  if (!p) return;
+  document.getElementById('prod-id').value = p.id;
+  document.getElementById('prod-name').value = p.name;
+  document.getElementById('prod-price').value = p.price;
+  document.getElementById('prod-category').value = p.category;
+  document.getElementById('prod-image').value = p.image || '';
+  document.getElementById('prod-desc').value = p.description || '';
+  openAdminForm();
+}
+
+function openAdminForm() {
+  document.getElementById('admin-form').style.display = 'grid';
+  document.getElementById('prod-name').focus();
+  showAdmin();
+}
+
+function closeAdminForm() {
+  const form = document.getElementById('admin-form');
+  form.reset();
+  form.style.display = 'none';
+  document.getElementById('prod-id').value = '';
+}
+
+function adminSave(e) {
+  e.preventDefault();
+  const idVal = document.getElementById('prod-id').value;
+  const name = document.getElementById('prod-name').value.trim();
+  const price = document.getElementById('prod-price').value.trim();
+  const category = document.getElementById('prod-category').value.trim();
+  const image = document.getElementById('prod-image').value.trim() || PLACEHOLDER;
+  const description = document.getElementById('prod-desc').value.trim();
+
+  if (!name || !price || !category) {
+    showAdminMsg('Please fill name, price and category.');
+    return;
+  }
+
+  products = loadProductsFromStorage();
+
+  if (idVal) {
+    const id = Number(idVal);
+    const idx = products.findIndex(p => p.id === id);
+    if (idx !== -1) products[idx] = { id, name, price, category, description, image };
+  } else {
+    const newId = products.length ? Math.max(...products.map(p => p.id)) + 1 : 1;
+    products.push({ id: newId, name, price, category, description, image });
+  }
+
+  saveProductsToStorage(products);
+  renderAdminList();
+  displayProducts();
+  closeAdminForm();
+  showAdminMsg('Saved.');
+}
+
+function adminDelete(id) {
+  if (!confirm('Delete this costume?')) return;
+  products = loadProductsFromStorage().filter(p => p.id !== id);
+  saveProductsToStorage(products);
+  renderAdminList();
+  displayProducts();
+  showAdminMsg('Deleted.');
+}
+
+function adminExport() {
+  const data = loadProductsFromStorage();
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'products.json';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function adminImport(e) {
+  const f = e.target.files[0];
+  if (!f) return;
+  const reader = new FileReader();
+  reader.onload = evt => {
+    try {
+      const data = JSON.parse(evt.target.result);
+      if (!Array.isArray(data)) throw new Error('Invalid format');
+      for (const it of data) {
+        if (typeof it.name !== 'string' || typeof it.price !== 'string' || typeof it.category !== 'string') {
+          throw new Error('Invalid product format');
+        }
+      }
+      let maxId = data.reduce((m,p)=> Math.max(m, Number(p.id) || 0), 0);
+      const normalized = data.map(p => {
+        const id = Number(p.id) || ++maxId;
+        return { id, name: p.name, price: p.price, category: p.category, description: p.description || '', image: p.image || PLACEHOLDER };
+      });
+      saveProductsToStorage(normalized);
+      products = normalized;
+      renderAdminList();
+      displayProducts();
+      showAdminMsg('Imported.');
+    } catch (err) {
+      alert('Import failed: ' + err.message);
+    }
+  };
+  reader.readAsText(f);
+  e.target.value = '';
+}
+
+function adminReset() {
+  if (!confirm('Reset product list to defaults? This will overwrite local changes.')) return;
+  products = structuredClone(DEFAULT_PRODUCTS);
+  saveProductsToStorage(products);
+  renderAdminList();
+  displayProducts();
+  showAdminMsg('Reset to defaults.');
+}
+
+function showAdminMsg(txt) {
+  const el = document.getElementById('admin-message');
+  if (!el) return;
+  el.textContent = txt;
+  setTimeout(()=> { if (el.textContent === txt) el.textContent = ''; }, 2000);
+}
+
+// ----- Show/hide admin -----
+function showAdmin() {
+  document.getElementById('home-section').classList.add('hidden');
+  const admin = document.getElementById('admin-section');
+  admin.style.display = 'block';
+  admin.setAttribute('aria-hidden', 'false');
+  products = loadProductsFromStorage();
+  renderAdminList();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function hideAdmin() {
+  document.getElementById('admin-section').style.display = 'none';
+  document.getElementById('admin-section').setAttribute('aria-hidden', 'true');
+  document.getElementById('home-section').classList.remove('hidden');
+  closeAdminForm();
+  displayProducts();
+}
+
+// ----- Utilities -----
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str).replace(/[&<>"']/g, function (s) {
+    return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[s];
+  });
+}
+
+function scrollToMore() {
+  window.scrollBy({ top: 200, behavior: 'smooth' });
+}
